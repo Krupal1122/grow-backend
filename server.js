@@ -62,7 +62,7 @@ mongoose
 app.post('/api/upload', upload.single('file'), (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+      return res.status(400).json({ message: 'No file uploaded' }); 
     }
     const fileUrl = `http://localhost:5000/uploads/${req.file.filename}`;
     res.status(200).json({ url: fileUrl });
