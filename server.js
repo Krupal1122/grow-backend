@@ -40,14 +40,14 @@ const sectionSchema = new mongoose.Schema({
   questions: [questionSchema],
 });
 
-const formSchema = new mongoose.Schema({
+const BlogSchema = new mongoose.Schema({
   title: { type: String, required: true },
   image: { type: String },
   sections: [sectionSchema],
   createdAt: { type: Date, default: Date.now },
 });
 
-const Form = mongoose.model('Form', formSchema);
+const Blog = mongoose.model('Blog', BlogSchema);
 
 // Connect to MongoDB
 mongoose
@@ -71,23 +71,23 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   }
 });
 
-app.post('/api/forms', async (req, res) => {
+app.post('/api/Blogs', async (req, res) => {
   try {
-    const formData = req.body;
-    const newForm = new Form(formData);
-    await newForm.save();
-    res.status(201).json({ message: 'Form data saved successfully', form: newForm });
+    const BlogData = req.body;
+    const newBlog = new Blog(BlogData);
+    await newBlog.save();
+    res.status(201).json({ message: 'Blog data saved successfully', Blog: newBlog });
   } catch (error) {
-    res.status(500).json({ message: 'Error saving form data', error: error.message });
+    res.status(500).json({ message: 'Error saving Blog data', error: error.message });
   }
 });
 
-app.get('/api/forms', async (req, res) => {
+app.get('/api/Blogs', async (req, res) => {
   try {
-    const forms = await Form.find();
-    res.status(200).json(forms);
+    const Blogs = await Blog.find();
+    res.status(200).json(Blogs);
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving forms', error: error.message });
+    res.status(500).json({ message: 'Error retrieving Blogs', error: error.message });
   }
 });
 

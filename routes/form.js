@@ -1,26 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const Form = require('../models/Form');
+const Blog = require('../models/Blog');
 
-// POST: Save form data to MongoDB
+// POST: Save Blog data to MongoDB
 router.post('/', async (req, res) => {
   try {
-    const formData = req.body;
-    const newForm = new Form(formData);
-    await newForm.save();
-    res.status(201).json({ message: 'Form data saved successfully', form: newForm });
+    const BlogData = req.body;
+    const newBlog = new Blog(BlogData);
+    await newBlog.save();
+    res.status(201).json({ message: 'Blog data saved successfully', Blog: newBlog });
   } catch (error) {
-    res.status(500).json({ message: 'Error saving form data', error: error.message });
+    res.status(500).json({ message: 'Error saving Blog data', error: error.message });
   }
 });
 
-// GET: Retrieve all forms (optional, for testing)
+// GET: Retrieve all Blogs (optional, for testing)
 router.get('/', async (req, res) => {
   try {
-    const forms = await Form.find();
-    res.status(200).json(forms);
+    const Blogs = await Blog.find();
+    res.status(200).json(Blogs);
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving forms', error: error.message });
+    res.status(500).json({ message: 'Error retrieving Blogs', error: error.message });
   }
 });
 
