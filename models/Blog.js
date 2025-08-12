@@ -10,11 +10,11 @@ const sectionSchema = new mongoose.Schema({
   questions: [questionSchema],
 });
 
-const BlogSchema = new mongoose.Schema({
+const Formschema = new mongoose.Schema({
   title: { type: String, required: true },
   image: { type: String }, // Store the image URL
   sections: [sectionSchema],
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('Blog', BlogSchema);
+module.exports = mongoose.model('Blog', Formschema);

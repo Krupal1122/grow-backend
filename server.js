@@ -40,14 +40,14 @@ const sectionSchema = new mongoose.Schema({
   questions: [questionSchema],
 });
 
-const BlogSchema = new mongoose.Schema({
+const Formschema = new mongoose.Schema({
   title: { type: String, required: true },
   image: { type: String },
   sections: [sectionSchema],
   createdAt: { type: Date, default: Date.now },
 });
 
-const Blog = mongoose.model('Blog', BlogSchema);
+const Blog = mongoose.model('Blog', Formschema);
 
 // Connect to MongoDB
 mongoose
@@ -71,7 +71,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   }
 });
 
-app.post('/api/Blogs', async (req, res) => {
+app.post('/api/Forms', async (req, res) => {
   try {
     const BlogData = req.body;
     const newBlog = new Blog(BlogData);
@@ -82,12 +82,12 @@ app.post('/api/Blogs', async (req, res) => {
   }
 });
 
-app.get('/api/Blogs', async (req, res) => {
+app.get('/api/Forms', async (req, res) => {
   try {
-    const Blogs = await Blog.find();
-    res.status(200).json(Blogs);
+    const Forms = await Blog.find();
+    res.status(200).json(Forms);
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving Blogs', error: error.message });
+    res.status(500).json({ message: 'Error retrieving Forms', error: error.message });
   }
 });
 

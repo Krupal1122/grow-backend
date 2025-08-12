@@ -14,13 +14,13 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET: Retrieve all Blogs (optional, for testing)
+// GET: Retrieve all Forms (optional, for testing)
 router.get('/', async (req, res) => {
   try {
-    const Blogs = await Blog.find();
-    res.status(200).json(Blogs);
+    const Forms = await Blog.find();
+    res.status(200).json(Forms);
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving Blogs', error: error.message });
+    res.status(500).json({ message: 'Error retrieving Forms', error: error.message });
   }
 });
 
