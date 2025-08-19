@@ -10,7 +10,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // Adjust if your frontend runs on a different port
+  origin: 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -34,7 +34,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
+  limits: { fileSize: 100 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const fileTypes = /jpeg|jpg|png|gif/;
     const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
@@ -57,6 +57,11 @@ mongoose
   .catch((err) => console.error('MongoDB connection error:', err));
 
 // Project Schema
+const dynamicfields = new mongoose.Schema({
+  type: { type: String, required: true, enum: ['image', 'title', 'description'] },
+  value: { type: String, required: true },
+});
+
 const projectSchema = new mongoose.Schema({
   title: { type: String, required: true },
   image: { type: String, required: true },
@@ -65,12 +70,13 @@ const projectSchema = new mongoose.Schema({
   liveView: { type: String, required: true },
   timelines: { type: String, required: true },
   services: { type: String, required: true },
+  dynamicFields: [dynamicfields],
   createdAt: { type: Date, default: Date.now },
 });
 
 const Project = mongoose.model('Project', projectSchema);
 
-// Blog Schema (from your provided code)
+// Blog Schema (unchanged)
 const questionSchema = new mongoose.Schema({
   questionText: { type: String, required: true },
   answerText: { type: String, default: '' },
@@ -93,16 +99,26 @@ const Blog = mongoose.model('Blog', blogSchema);
 // Routes
 const router = express.Router();
 
-// --- Project Routes ---
-
 // POST: Create a new project
 router.post('/projects', async (req, res) => {
   try {
-    console.log('Received project data:', req.body); // Debug log
-    const { title, image, platform, category, liveView, timelines, services } = req.body;
+    console.log('Received project data:', req.body);
+    console.log('Dynamic fields in request:', req.body.dynamicFields); // Debug: Log dynamicFields
+    const { title, image, platform, category, liveView, timelines, services, dynamicFields } = req.body;
 
     if (!title || !image || !platform || !category || !liveView || !timelines || !services) {
       return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    if (Array.isArray(dynamicFields)) {
+      for (const field of dynamicFields) {
+        if (!['image', 'title', 'description'].includes(field.type)) {
+          return res.status(400).json({ message: `Invalid dynamic field type: ${field.type}` });
+        }
+        if (!field.value) {
+          return res.status(400).json({ message: `Value is required for dynamic field type: ${field.type}` });
+        }
+      }
     }
 
     const project = new Project({
@@ -113,9 +129,11 @@ router.post('/projects', async (req, res) => {
       liveView: liveView.trim(),
       timelines: timelines.trim(),
       services: services.trim(),
+      dynamicFields: Array.isArray(dynamicFields) ? dynamicFields : [],
     });
 
     await project.save();
+    console.log('Saved project:', project); // Debug: Log saved project
     res.status(201).json({ message: 'Project created successfully', project });
   } catch (error) {
     console.error('Error creating project:', error);
@@ -127,6 +145,7 @@ router.post('/projects', async (req, res) => {
 router.get('/projects', async (req, res) => {
   try {
     const projects = await Project.find().sort({ createdAt: -1 });
+    console.log('Retrieved projects:', projects); // Debug: Log retrieved projects
     res.status(200).json(projects);
   } catch (error) {
     console.error('Error retrieving projects:', error);
@@ -141,6 +160,7 @@ router.get('/projects/:id', async (req, res) => {
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
+    console.log('Retrieved project:', project); // Debug: Log retrieved project
     res.status(200).json(project);
   } catch (error) {
     console.error('Error retrieving project:', error);
@@ -151,12 +171,24 @@ router.get('/projects/:id', async (req, res) => {
 // PUT: Update a project by ID
 router.put('/projects/:id', async (req, res) => {
   try {
-    console.log('Received update project data:', req.body); // Debug log
+    console.log('Received update project data:', req.body);
+    console.log('Dynamic fields in update:', req.body.dynamicFields); // Debug: Log dynamicFields
     const { id } = req.params;
-    const { title, image, platform, category, liveView, timelines, services } = req.body;
+    const { title, image, platform, category, liveView, timelines, services, dynamicFields } = req.body;
 
     if (!title || !image || !platform || !category || !liveView || !timelines || !services) {
       return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    if (Array.isArray(dynamicFields)) {
+      for (const field of dynamicFields) {
+        if (!['image', 'title', 'description'].includes(field.type)) {
+          return res.status(400).json({ message: `Invalid dynamic field type: ${field.type}` });
+        }
+        if (!field.value) {
+          return res.status(400).json({ message: `Value is required for dynamic field type: ${field.type}` });
+        }
+      }
     }
 
     const updatedProject = await Project.findByIdAndUpdate(
@@ -169,6 +201,7 @@ router.put('/projects/:id', async (req, res) => {
         liveView: liveView.trim(),
         timelines: timelines.trim(),
         services: services.trim(),
+        dynamicFields: Array.isArray(dynamicFields) ? dynamicFields : [],
       },
       { new: true, runValidators: true }
     );
@@ -176,6 +209,7 @@ router.put('/projects/:id', async (req, res) => {
     if (!updatedProject) {
       return res.status(404).json({ message: 'Project not found' });
     }
+    console.log('Updated project:', updatedProject); // Debug: Log updated project
     res.status(200).json({ message: 'Project updated successfully', project: updatedProject });
   } catch (error) {
     console.error('Error updating project:', error);
@@ -198,12 +232,10 @@ router.delete('/projects/:id', async (req, res) => {
   }
 });
 
-// --- Blog Routes (from your provided code) ---
-
-// POST: Save Blog data
+// Blog Routes (unchanged)
 router.post('/forms', async (req, res) => {
   try {
-    console.log('Received blog data:', req.body); // Debug log
+    console.log('Received blog data:', req.body);
     const blogData = req.body;
 
     if (!blogData.title) {
@@ -222,7 +254,6 @@ router.post('/forms', async (req, res) => {
   }
 });
 
-// GET: Retrieve all Blogs
 router.get('/forms', async (req, res) => {
   try {
     const forms = await Blog.find().sort({ createdAt: -1 });
@@ -233,7 +264,6 @@ router.get('/forms', async (req, res) => {
   }
 });
 
-// GET: Retrieve a single Blog by ID
 router.get('/forms/:id', async (req, res) => {
   try {
     const form = await Blog.findById(req.params.id);
@@ -247,10 +277,9 @@ router.get('/forms/:id', async (req, res) => {
   }
 });
 
-// PUT: Update a Blog by ID
 router.put('/forms/:id', async (req, res) => {
   try {
-    console.log('Received update blog data:', req.body); // Debug log
+    console.log('Received update blog data:', req.body);
     const { id } = req.params;
     const blogData = req.body;
     const updatedBlog = await Blog.findByIdAndUpdate(id, blogData, {
@@ -267,7 +296,6 @@ router.put('/forms/:id', async (req, res) => {
   }
 });
 
-// DELETE: Delete a Blog by ID
 router.delete('/forms/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -288,7 +316,8 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-    const fileUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+    const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
+    const fileUrl = `${baseUrl}/uploads/${req.file.filename}`;
     res.status(200).json({ url: fileUrl });
   } catch (error) {
     console.error('Error uploading file:', error);
